@@ -48,48 +48,50 @@ var CONTRACT_CHARGER = {};
 
 // function info updater
 async function looper() {
-  //   try {
+  try {
+    // GET block numbers
+    DATA["block"] = {
+      ETH: await web3_ETH.eth.getBlockNumber(),
+      HECO: await web3_HECO.eth.getBlockNumber(),
+      BSC: await web3_BSC.eth.getBlockNumber(),
+    };
 
-  // GET block numbers
-  DATA["block"] = {
-    ETH: await web3_ETH.eth.getBlockNumber(),
-    HECO: await web3_HECO.eth.getBlockNumber(),
-    BSC: await web3_BSC.eth.getBlockNumber(),
-  };
+    // GET total supply
+    let totalSupply = [];
+    for (network in CONTRACT_CHARGER) {
+      // console.log(CONTRACT_CHARGER[network]);
+      CONTRACT_CHARGER[network].forEach(async (contract) => {
+        totalSupply.push(contract.methods.totalSupply().call());
+      });
+    }
+    totalSupply = await Promise.all(totalSupply);
 
-  // GET total supply
-  let totalSupply = [];
-  for (network in CONTRACT_CHARGER) {
-    // console.log(CONTRACT_CHARGER[network]);
-    CONTRACT_CHARGER[network].forEach(async (contract) => {
-      totalSupply.push(contract.methods.totalSupply().call());
-    });
+    DATA["total_supply"] = 0;
+    totalSupply.map(
+      (supply) =>
+        (DATA["total_supply"] += Number(
+          web3_ETH.utils.fromWei(supply, "ether")
+        ))
+    );
+
+    // GET Price data
+    const price_ret = await axios.get(
+      "https://api.coingecko.com/api/v3/simple/price?ids=recharge&vs_currencies=usd"
+    );
+    const price = price_ret.data.recharge.usd;
+
+    // GET TVL data
+    DATA["TVL"] = DATA["total_supply"] * price;
+
+    //   DATA["total_locked"] = {
+    //     ETH: await CONTRACT_CHARGER["ETH"][0].methods.totalSupply().call(),
+    //     HECO: await CONTRACT_CHARGER["HECO"][0].methods.totalSupply().call(),
+    //     BSC: await CONTRACT_CHARGER["BSC"][0].methods.totalSupply().call(),
+    //   };
+  } catch (e) {
+    console.log(e);
+    DATA = { looper_error: e };
   }
-  totalSupply = await Promise.all(totalSupply);
-
-  DATA["total_supply"] = 0;
-  totalSupply.map(
-    (supply) =>
-      (DATA["total_supply"] += Number(web3_ETH.utils.fromWei(supply, "ether")))
-  );
-
-  // GET Price data
-  const price_ret = await axios.get(
-    "https://api.coingecko.com/api/v3/simple/price?ids=recharge&vs_currencies=usd"
-  );
-  const price = price_ret.data.recharge.usd;
-
-  // GET TVL data
-  DATA["TVL"] = DATA["total_supply"] * price;
-
-  //   DATA["total_locked"] = {
-  //     ETH: await CONTRACT_CHARGER["ETH"][0].methods.totalSupply().call(),
-  //     HECO: await CONTRACT_CHARGER["HECO"][0].methods.totalSupply().call(),
-  //     BSC: await CONTRACT_CHARGER["BSC"][0].methods.totalSupply().call(),
-  //   };
-  //   } catch (e) {
-  //     DATA = { looper_error: e };
-  //   }
 }
 
 async function createChargerInstance() {

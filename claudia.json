@@ -1,0 +1,10 @@
+{
+  "lambda": {
+    "role": "get-tvl-executor",
+    "name": "get-tvl",
+    "region": "ap-northeast-2"
+  },
+  "api": {
+    "id": "0vvbda5stg"
+  }
+}
