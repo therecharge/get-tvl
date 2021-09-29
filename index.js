@@ -137,6 +137,7 @@ async function init() {
 init();
 
 function get_all(req, res) {
+  console.log(DATA);
   res.send(DATA);
 }
 
@@ -149,6 +150,7 @@ app.use(cors());
 app.get("/", get_all);
 app.get("/tvl", get_tvl);
 
-app.listen(3000, function () {
-  console.log("Example app listening on port 3000!");
-});
+// app.listen(3000, function () {
+//   console.log("Example app listening on port 3000!");
+// });
+module.exports = app;
